@@ -3,6 +3,8 @@ package com.hessah.composetutorial
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -12,12 +14,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hessah.composetutorial.ui.theme.ComposeTutorialTheme
+//?#
+import androidx.compose.foundation.clickable
+import androidx.compose.material.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 
 class MainActivity : ComponentActivity() {
@@ -39,21 +49,31 @@ fun MessageCard(msgPARAMETER: com.hessah.composetutorial.MessageDDCC) {
 
     Row {
         Image(
-
            painter = painterResource(R.drawable.ic_launcher_foreground),
             contentDescription = "Contact profile picture "
        , modifier = Modifier
                     // set image size to 40 db
                 .size(40.dp)
-                // Clip(cut) : image to be shaped as a circle
+                // Clip(cut) : image to be shaped as a circle ##
                 .clip(CircleShape)
                 .border(1.5.dp, MaterialTheme.colors.secondary, CircleShape)
-
         )
-        // add a horizontal space between the image and the column
+
+        ////// add a horizontal space between the image and the column ##
         Spacer(modifier = Modifier.width(8.dp))
 
-        Column {
+        // i keep track if the message is expanded or not (this variable ##
+        var isExpanded by remember { mutableStateOf(false)}
+        // surfaceColor will be updated gradually from one color to the other????
+        val surfaceColor by animateColorAsState(
+            if (isExpanded) MaterialTheme.colors.primary else MaterialTheme.colors.surface,
+        )
+
+
+
+        //we toggle the isExpanded variable when we click on the column ##
+        Column( modifier = Modifier.clickable { isExpanded=!isExpanded } )
+        {
             Text(
                 text = msgPARAMETER.author
              , color = MaterialTheme.colors.secondaryVariant
@@ -61,9 +81,25 @@ fun MessageCard(msgPARAMETER: com.hessah.composetutorial.MessageDDCC) {
             )
 
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = msgPARAMETER.body,
-                style = MaterialTheme.typography.body2
-            )
+
+            Surface (
+                shape = MaterialTheme.shapes.medium, elevation = 1.dp ,
+                // surfaceColor color will be changing gradually from primary to surface
+                color = surfaceColor,
+                // animateContentSize will change the Surface size gradually
+                modifier = Modifier.animateContentSize().padding(1.dp))
+                 //       block Surface ##  >>
+                   {
+                Text(
+                    text = msgPARAMETER.body,
+                    modifier = Modifier.padding(all = 4.dp),
+
+                    // if the message is expanded : we display all its content
+                    //otherwise only display the first line 1 ##
+                    maxLines = if (isExpanded) Int.MAX_VALUE else 1,
+                    style = MaterialTheme.typography.body2
+                )
+            } // end block surface
         }
     }
 }
@@ -106,13 +142,6 @@ fun PreviewConversation() {
         Conversation(SampleData.conversationSample)
     }
 }
-
-
-
-
-
-
-
 
 
 
